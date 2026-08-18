@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+
 import {
   getLeadNotes,
   createLeadNote,
@@ -10,41 +11,61 @@ import {
 
 const router = express.Router();
 
-// ─── Multer Config for File Uploads ───
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/lead-notes/"); // is folder ko ensure karein ki exist karta ho
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+// ─────────────────────────────────────────────
+// Multer Config - Vercel Compatible
+// ─────────────────────────────────────────────
+
+const storage = multer.memoryStorage();
 
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  storage,
+
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
+
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|mp3|wav|webm|mp4/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedExtensions =
+      /\.(jpeg|jpg|png|gif|pdf|mp3|wav|webm|mp4)$/i;
+
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+      "audio/mpeg",
+      "audio/wav",
+      "audio/webm",
+      "video/mp4",
+    ];
+
+    const extname = allowedExtensions.test(file.originalname);
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
+
     if (extname && mimetype) {
       return cb(null, true);
     }
-    cb(new Error("Only images, PDFs, audio & video files allowed!"));
+
+    cb(
+      new Error(
+        "Only images, PDFs, audio & video files are allowed!"
+      )
+    );
   },
 });
 
-// Create folder if not exists (simple check)
-import fs from "fs";
-const uploadDir = "uploads/lead-notes/";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// ─────────────────────────────────────────────
+// Routes
+// ─────────────────────────────────────────────
 
-// ─── Routes ───
-router.route("/").get(getLeadNotes).post(upload.single("attachmentFile"), createLeadNote);
+router
+  .route("/")
+  .get(getLeadNotes)
+  .post(upload.single("attachmentFile"), createLeadNote);
 
-router.route("/:id").put(upload.single("attachmentFile"), updateLeadNote).delete(deleteLeadNote);
+router
+  .route("/:id")
+  .put(upload.single("attachmentFile"), updateLeadNote)
+  .delete(deleteLeadNote);
 
 export default router;
