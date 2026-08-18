@@ -1,0 +1,14 @@
+services:
+   backend:
+     build: .
+     container_name: advocate-backend
+     ports:
+        - "5100:5000"
+
+     env_file:
+        - .env
+     volumes:
+        - .:/app
+        - /app/node_modules
+
+     command: npm run dev
