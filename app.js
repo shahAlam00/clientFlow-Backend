@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import leadNoteRoutes from "./modules/leadNotes/leadNote.routes.js"
-import clientRoutes from "./modules/clients/client.routes.js";
+import studentRoutes from "./modules/student/student.routes.js";
 import activityRoutes from "./modules/Activiuy/activity.route.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import caseRoutes from
@@ -91,8 +91,9 @@ app.get("/", (req, res) => {
 ======================= */
 
 app.use("/api/leads-notes", leadNoteRoutes);
-app.use("/api/clients", clientRoutes);
+
 app.use("/api/auth", authRoutes);
+app.use("/api/students", studentRoutes);
 app.use(
   "/api/cases",
   caseRoutes
@@ -117,4 +118,4 @@ app.use((req, res) => {
 
 
 
-export default app;
+export default app; 
