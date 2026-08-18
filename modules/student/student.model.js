@@ -6,6 +6,7 @@ const studentSchema = new mongoose.Schema({
     type: String,
     unique: true,
     index: true,
+    sparse: true,
   },
 
   // ─── Section 1: Student Photo & ID ───
@@ -173,7 +174,22 @@ const studentSchema = new mongoose.Schema({
   timestamps: true // Automatically adds createdAt and updatedAt fields
 });
 
+// ─── Pre-save hook (Removed 'next' since async/await handles it automatically) ───
+studentSchema.pre('save', async function() {
+  if (!this.clientId && this.studentName) {
+    const nameParts = this.studentName.trim().split(' ');
+    let prefix = 'STU';
+    
+    if (nameParts.length >= 2) {
+      prefix = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+    } else if (nameParts.length === 1 && nameParts[0].length >= 3) {
+      prefix = nameParts[0].substring(0, 3).toUpperCase();
+    }
 
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    this.clientId = `CLI-${prefix}-${randomNum}`;
+  }
+});
 
 const Student = mongoose.model('Student', studentSchema);
 
